@@ -1,0 +1,68 @@
+name: snapshot
+
+# Deadline-aware watcher, NOT a weekly cron.
+#
+# FPL deadlines this season fall on Sat 13:30 (x16), Sat 12:30 (x7),
+# Fri 17:30 (x5), Wed 18:30 (x5), plus Sat 10:00/11:00 and two Sundays.
+# Eight distinct slots across four days. Any fixed weekly schedule is wrong
+# for most of the season, and "wrong" here means silently losing a
+# gameweek's rival squads forever.
+#
+# So: run cheaply every 2 hours and let the API's own `deadline_time` decide
+# whether there is work. Runs at :17 because scheduled jobs queue behind
+# everyone else's on-the-hour crons and get delayed or dropped.
+#
+# Cost: 12 runs/day x 30 = ~360 billed minutes/month (jobs round up to the
+# whole minute). Public repo => free and unmetered anyway.
+
+on:
+  schedule:
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      gw:
+        description: "Force a snapshot of this gameweek"
+        required: false
+      force:
+        description: "Re-snapshot even if one exists"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Watch for work
+        run: |
+          python -m scripts.ingest ${{ inputs.gw && 'snapshot' || 'watch' }} \
+            ${{ inputs.gw && format('--gw {0}', inputs.gw) || '' }} \
+            ${{ inputs.force && '--force' || '' }}
+
+      - name: Commit snapshot
+        run: |
+          git config user.name  "fpl-edge[bot]"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "no changes"
+          else
+            git commit -m "snapshot: $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

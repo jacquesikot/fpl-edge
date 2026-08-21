@@ -1,0 +1,6 @@
+pandas>=2.0
+pyarrow>=14.0
+numpy>=1.24
+scipy>=1.10
+pulp>=2.7
+PyYAML>=6.0

@@ -1,0 +1,12 @@
+entry_id: null
+leagues:
+  focus: null
+  secondary: []
+strategy:
+  edge_per_gw: 0.0
+  horizon_gws: 6
+  target_overlap: 0.65
+  max_ep_sacrifice: 4.0
+data:
+  root: data
+  journal_root: journal
