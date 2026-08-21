@@ -1,0 +1,74 @@
+{
+ "league": {
+  "admin_entry": 6034179,
+  "closed": false,
+  "code_privacy": "p",
+  "created": "2026-08-19T09:28:06.715664Z",
+  "cup_league": null,
+  "has_cup": true,
+  "id": 1325554,
+  "league_type": "x",
+  "max_entries": null,
+  "name": "SouthSide Boyz",
+  "rank": null,
+  "scoring": "c",
+  "start_event": 1
+ },
+ "results": [
+  {
+   "club_badge_src": null,
+   "entry": 6034179,
+   "entry_name": "HB-YKBNZK",
+   "event_total": 12,
+   "last_rank": 0,
+   "player_name": "Ini War",
+   "rank": 1,
+   "rank_sort": 1,
+   "total": 12
+  },
+  {
+   "club_badge_src": null,
+   "entry": 8620461,
+   "entry_name": "blackchester",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Alex Abiola",
+   "rank": 2,
+   "rank_sort": 2,
+   "total": 9
+  },
+  {
+   "club_badge_src": null,
+   "entry": 8539428,
+   "entry_name": "Sound of da Tzolis",
+   "event_total": 5,
+   "last_rank": 0,
+   "player_name": "Abasiubong Udoh",
+   "rank": 3,
+   "rank_sort": 3,
+   "total": 5
+  },
+  {
+   "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/1345896/e60e3b59-3bbb-4f5b-9575-e919f4406b89.png",
+   "entry": 1241398,
+   "entry_name": "FC Genius",
+   "event_total": 5,
+   "last_rank": 0,
+   "player_name": "Segun Ajegunle",
+   "rank": 3,
+   "rank_sort": 4,
+   "total": 5
+  },
+  {
+   "club_badge_src": null,
+   "entry": 5311604,
+   "entry_name": "blue",
+   "event_total": 4,
+   "last_rank": 0,
+   "player_name": "charles jnr",
+   "rank": 5,
+   "rank_sort": 5,
+   "total": 4
+  }
+ ]
+}

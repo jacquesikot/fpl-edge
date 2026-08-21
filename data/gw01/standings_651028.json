@@ -1,0 +1,283 @@
+{
+ "league": {
+  "admin_entry": 3168756,
+  "closed": false,
+  "code_privacy": "p",
+  "created": "2026-08-06T23:56:18.252741Z",
+  "cup_league": null,
+  "has_cup": true,
+  "id": 651028,
+  "league_type": "x",
+  "max_entries": null,
+  "name": "This Is It",
+  "rank": null,
+  "scoring": "c",
+  "start_event": 1
+ },
+ "results": [
+  {
+   "club_badge_src": null,
+   "entry": 5843169,
+   "entry_name": "Nsikakabasi",
+   "event_total": 26,
+   "last_rank": 0,
+   "player_name": "Artetas Attacking Champion",
+   "rank": 1,
+   "rank_sort": 1,
+   "total": 26
+  },
+  {
+   "club_badge_src": null,
+   "entry": 939480,
+   "entry_name": "Abdool FC",
+   "event_total": 11,
+   "last_rank": 0,
+   "player_name": "Abdul Ibrahim",
+   "rank": 2,
+   "rank_sort": 2,
+   "total": 11
+  },
+  {
+   "club_badge_src": null,
+   "entry": 3594428,
+   "entry_name": "Soul FC",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Sola Akanmu",
+   "rank": 3,
+   "rank_sort": 3,
+   "total": 9
+  },
+  {
+   "club_badge_src": null,
+   "entry": 3814467,
+   "entry_name": "striker_bally",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Coulibaly Abubakar",
+   "rank": 3,
+   "rank_sort": 4,
+   "total": 9
+  },
+  {
+   "club_badge_src": null,
+   "entry": 5726366,
+   "entry_name": "MR BARRYY",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Sochi Elosiuba",
+   "rank": 3,
+   "rank_sort": 5,
+   "total": 9
+  },
+  {
+   "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/3348130/c706c121-c69c-4402-b01d-848ec50eedf7.png",
+   "entry": 3348130,
+   "entry_name": "Range FC",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Gonzalez Faul",
+   "rank": 3,
+   "rank_sort": 6,
+   "total": 9
+  },
+  {
+   "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/1531433/70937426-b58a-4bf8-8c84-7943f6ef4928.png",
+   "entry": 1531433,
+   "entry_name": "Tony FC",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Anthony Ajayi",
+   "rank": 3,
+   "rank_sort": 7,
+   "total": 9
+  },
+  {
+   "club_badge_src": null,
+   "entry": 5629971,
+   "entry_name": "Tit4Tat FC",
+   "event_total": 9,
+   "last_rank": 0,
+   "player_name": "Gregory Kimore",
+   "rank": 3,
+   "rank_sort": 8,
+   "total": 9
+  },
+  {
+   "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/4491762/84c97582-2d01-4faf-b90a-dfcb4f08cbb7.png",
+   "entry": 193258,
+   "entry_name": "Bomb! Squad",
+   "event_total": 8,
+   "last_rank": 0,
+   "player_name": "Jide Olatunbode",
+   "rank": 9,
+   "rank_sort": 9,
+   "total": 8
+  },
+  {
+   "club_badge_src": null,
+   "entry": 3876793,
+   "entry_name": "MASTODON FC",
+   "event_total": 8,
+   "last_rank": 0,
+   "player_name": "Nnanna Enyi",
+   "rank": 9,
+   "rank_sort": 10,
+   "total": 8
+  },
+  {
+   "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/7118791/2b3f6eaa-91ba-4d84-9207-7a0265c16a69.png",
+   "entry": 7118791,
+   "entry_name": "Double A",
+   "event_total": 8,
+   "last_rank": 0,
+   "player_name": "Allan Aluda",
+   "rank": 9,
+   "rank_sort": 11,
+   "total": 8
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7906829,
+   "entry_name": "slickerthanuraverage",
+   "event_total": 5,
+   "last_rank": 0,
+   "player_name": "Taiwo A",
+   "rank": 12,
+   "rank_sort": 12,
+   "total": 5
+  },
+  {
+   "club_badge_src": null,
+   "entry": 5801330,
+   "entry_name": "AAAfc",
+   "event_total": 5,
+   "last_rank": 0,
+   "player_name": "Idris Adedeji",
+   "rank": 12,
+   "rank_sort": 13,
+   "total": 5
+  },
+  {
+   "club_badge_src": null,
+   "entry": 3168756,
+   "entry_name": "Agaba Thunders",
+   "event_total": 5,
+   "last_rank": 0,
+   "player_name": "Boniface Ushie",
+   "rank": 12,
+   "rank_sort": 14,
+   "total": 5
+  },
+  {
+   "club_badge_src": null,
+   "entry": 5949689,
+   "entry_name": "Jo\u00e4o Pedro Pascal",
+   "event_total": 2,
+   "last_rank": 0,
+   "player_name": "Jeremiah Ntholi",
+   "rank": 15,
+   "rank_sort": 15,
+   "total": 2
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7211815,
+   "entry_name": "Jaguda FC",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Kananaskis Okotoks",
+   "rank": 16,
+   "rank_sort": 16,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 8776837,
+   "entry_name": "Docky FC",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Rildwan Akintola",
+   "rank": 16,
+   "rank_sort": 17,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7333319,
+   "entry_name": "AgileA",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Akin Orunmuyi",
+   "rank": 16,
+   "rank_sort": 18,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7220714,
+   "entry_name": "Adie's Ballers",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Adie Ugbong",
+   "rank": 16,
+   "rank_sort": 19,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7167542,
+   "entry_name": "Elite Jugadores'",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "John Egwu",
+   "rank": 16,
+   "rank_sort": 20,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 4726321,
+   "entry_name": "Dream 11",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Mzta Browndy",
+   "rank": 16,
+   "rank_sort": 21,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7588240,
+   "entry_name": "The Benedictus",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Wendy Njeri",
+   "rank": 16,
+   "rank_sort": 22,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 2617329,
+   "entry_name": "vanta black",
+   "event_total": 1,
+   "last_rank": 0,
+   "player_name": "Gabriel Ayeni",
+   "rank": 16,
+   "rank_sort": 23,
+   "total": 1
+  },
+  {
+   "club_badge_src": null,
+   "entry": 7698572,
+   "entry_name": "KONG SC",
+   "event_total": 0,
+   "last_rank": 0,
+   "player_name": "Xerenze Franklyne",
+   "rank": 24,
+   "rank_sort": 24,
+   "total": 0
+  }
+ ]
+}

@@ -1,7 +1,7 @@
-entry_id: null
+entry_id: 8994909
 leagues:
-  focus: null
-  secondary: []
+  focus: 1325554
+  secondary: [651028]
 strategy:
   edge_per_gw: 0.0
   horizon_gws: 6
