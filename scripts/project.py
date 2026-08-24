@@ -18,10 +18,12 @@ data. It blends:
   * fixture difficulty over the horizon, home/away adjusted
 
 Known weaknesses, in rough order of how much they cost you:
-  1. No explicit minutes model — rotation risk is only crudely handled.
-  2. Fixture adjustment is FDR-based, not xG-based team strength.
-  3. No set-piece / penalty premium beyond what price already encodes.
-  4. Bonus points are folded into the historical rate, not modelled.
+  1. Fixture adjustment is FDR-based, not xG-based team strength.
+  2. No set-piece / penalty premium beyond what price already encodes.
+  3. Bonus points are folded into the historical rate, not modelled.
+  4. `start_probability` predicts a STARTING role, not rotation within a
+     known starter group, and cannot see press conferences — the `lock`
+     step still matters.
 Replace with a proper Poisson goal model once you have 6-8 gameweeks of
 this season's xG in the snapshots.
 """
@@ -37,12 +39,159 @@ POS_BASE = {1: 3.4, 2: 3.3, 3: 3.6, 4: 3.8}
 
 
 def availability(players: pd.DataFrame) -> pd.Series:
-    """P(plays a meaningful share of minutes). Crude but keeps the ILP honest."""
+    """P(fit and permitted to play) — INJURY/SUSPENSION ONLY.
+
+    This deliberately says nothing about whether a fit player is actually in
+    the manager's XI. A fully fit bench player scores 1.0 here, exactly like
+    a nailed starter. That is not a bug in this function; role is handled
+    separately by `start_probability`, and the two are multiplied.
+    """
     chance = players["chance_of_playing_next_round"]
     avail = np.where(chance.notna(), chance.fillna(100) / 100.0, 1.0)
     avail = np.where(players["status"].isin(["i", "s", "u", "n"]), 0.0, avail)
     avail = np.where(players["status"] == "d", np.minimum(avail, 0.6), avail)
     return pd.Series(avail, index=players.index).clip(0, 1)
+
+
+# minutes in a full season if you start every game
+_SEASON_MINUTES = 38 * 90
+
+# Bounds on expected share of minutes. A rotation risk is discounted, never
+# written off; a nailed starter is credited, never assumed to play 100%.
+# Tighten these and rotation stops mattering; widen them and the optimiser
+# starts preferring availability over scoring ability.
+MIN_SHARE = 0.55
+MAX_SHARE = 0.92
+
+# Position-normalisation reference. STARTER_QUANTILE picks the point in a
+# position's minutes distribution that represents a nailed starter, and
+# STARTER_TARGET is the p_start we assign there. Using the MEDIAN here is
+# wrong: most players in a position are non-starters, so the median is far
+# below a starter's workload and dividing by it inflates everyone.
+STARTER_QUANTILE = 0.85
+STARTER_TARGET = 0.88
+
+# Hard ceiling on p_start. Nobody starts every match: injuries, rotation,
+# suspensions and cup competitions all intervene.
+CEILING = 0.95
+
+
+def _last_season_minutes(ids: list[int]) -> pd.Series:
+    """Minutes played last season, from element-summary history_past."""
+    out = {}
+    for pid in ids:
+        try:
+            s = fpl._fetch(f"element-summary/{pid}/", ttl=86400)
+            past = s.get("history_past") or []
+            if past:
+                out[pid] = float(past[-1].get("minutes") or 0)
+        except Exception:  # noqa: BLE001
+            continue
+    return pd.Series(out, dtype=float)
+
+
+def start_probability(players: pd.DataFrame, from_gw: int,
+                      last_minutes: pd.Series | None = None) -> pd.Series:
+    """P(starts a given gameweek), independent of injury status.
+
+    This is the fix for the model's largest documented weakness: before it,
+    expected minutes were a function of PRICE (>=5.5m got 0.85, else 0.72),
+    so a fit, expensive, permanently-benched player was indistinguishable
+    from a nailed starter.
+
+    Three signals, blended by how much each deserves to be trusted:
+
+      role prior   last season's minutes / (38*90). At GW2 this is nearly
+                   all we have, and it is a genuinely good predictor of
+                   whether a player is a starter or a squad option.
+      current form this season's starts / matches played. Strong evidence
+                   but tiny sample early, so its weight grows with the
+                   number of matches played, reaching parity around GW8.
+      price rank   percentile of price within the player's own club. Weak,
+                   used only as a tiebreak and to rescue players with no
+                   history at all (promoted clubs, new signings, youth).
+
+    The weight on current form is `n / (n + 4)`, so one match carries 20%
+    and eight matches carry 67%. That deliberately stops a single start
+    from certifying anyone as nailed.
+
+    A floor of 0.25 applies to players whose current starts rate exceeds
+    their historical rate — a young player breaking into the XI must not be
+    permanently condemned by last season's bench minutes.
+
+    Values are capped at CEILING (0.95), not 1.0: nobody starts every match.
+    The output is better trusted as a RANKING than as a calibrated
+    probability — it is fit for ordering players in the ILP, not for
+    computing exact expected minutes.
+    """
+    idx = players.index
+    n_played = pd.to_numeric(players.get("starts"), errors="coerce").fillna(0.0)
+    minutes_now = pd.to_numeric(players["minutes"], errors="coerce").fillna(0.0)
+
+    matches = max(int(from_gw) - 1, 0)
+
+    price = players["now_cost"].astype(float)
+    club_rank = price.groupby(players["team"]).rank(pct=True)
+
+    if last_minutes is not None and len(last_minutes):
+        raw = players["id"].map(last_minutes).astype(float)
+        # Normalise WITHIN POSITION. Raw minutes are not comparable across
+        # positions: a keeper on 2200 minutes is a backup, an attacker on
+        # 2200 is nailed. Without this, goalkeepers and centre-backs sweep
+        # the top of the ranking and the optimiser buys availability
+        # instead of points.
+        share = (raw / _SEASON_MINUTES).clip(0, 1)
+
+        # Reference point must be a STARTER, not the median player. Most
+        # players in any position are non-starters, so a median reference is
+        # tiny (keepers: 0.092) and dividing by it inflates anyone who played
+        # at all — 33% of the pool pinned at the ceiling in an earlier cut.
+        # Use a high percentile of the position's own distribution, which
+        # tracks "what a nailed starter in this position actually logs".
+        pos_ref = share.groupby(players["element_type"]).transform(
+            lambda g: g.quantile(STARTER_QUANTILE)
+        )
+        pos_ref = pos_ref.where(pos_ref > 0.20, 0.80)  # sane floor
+        prior = (share / pos_ref) * STARTER_TARGET
+
+        # Injured-elite rescue: a player who is expensive relative to his
+        # club but has few minutes was hurt, not benched. Price is the
+        # better signal of intended role in that case.
+        expensive = club_rank >= 0.80
+        low_mins = share < 0.55
+        rescue = expensive & low_mins & raw.notna()
+        prior = prior.where(~rescue, np.maximum(prior, 0.55 + 0.35 * club_rank))
+    else:
+        # No last-season minutes (shallow mode). Do NOT fall straight through
+        # to a price-only prior — that is the original bug this function
+        # exists to fix. Use whatever this season already shows, and only
+        # lean on price where there is genuinely nothing else.
+        prior = pd.Series(np.nan, index=idx, dtype=float)
+        if matches > 0:
+            seen = (n_played / matches).clip(0, 1)
+            has_evidence = (n_played > 0) | (minutes_now > 0)
+            prior = prior.where(~has_evidence, 0.30 + 0.60 * seen)
+
+    prior = prior.fillna(0.35 + 0.45 * club_rank)
+    prior = prior.clip(0.05, CEILING)
+
+    if matches > 0:
+        starts_rate = (n_played / matches).clip(0, 1)
+        # Impact-sub pattern: plenty of minutes, few or no starts. Testing for
+        # exactly zero starts missed the player with 1 start in 20 games, so
+        # test the rate instead and floor rather than overwrite.
+        mins_per_match = minutes_now / max(matches, 1)
+        sub_pattern = (starts_rate <= 0.25) & (mins_per_match >= 15.0)
+        starts_rate = starts_rate.where(~sub_pattern,
+                                        np.maximum(starts_rate, 0.15))
+        w = matches / (matches + 4.0)
+        p_start = (1 - w) * prior + w * starts_rate
+        breaking_out = starts_rate > prior
+        p_start = p_start.where(~breaking_out, np.maximum(p_start, 0.25))
+    else:
+        p_start = prior
+
+    return pd.Series(p_start, index=idx).clip(0.0, CEILING)
 
 
 def fixture_multiplier(teams: pd.DataFrame, fixtures: pd.DataFrame,
@@ -101,12 +250,15 @@ def project(players: pd.DataFrame, teams: pd.DataFrame, fixtures: pd.DataFrame,
 
     prior = _price_prior(p)
     rate = prior.copy()
+    last_min: pd.Series | None = None
 
     if deep:
         # Only bother with plausible picks: cuts ~600 calls to ~300.
         cand = p[(p["now_cost"] >= 40) & (p["status"] != "u")]["id"].tolist()
         print(f"  fetching last-season rates for {len(cand)} players...")
         hist = _last_season_rate(cand)
+        # same cached element-summary calls, so this is effectively free
+        last_min = _last_season_minutes(cand)
         mapped = p["id"].map(hist)
         # shrink toward the price prior — last season is evidence, not truth
         rate = np.where(mapped.notna(), 0.65 * mapped.fillna(0) + 0.35 * prior, prior)
@@ -118,12 +270,29 @@ def project(players: pd.DataFrame, teams: pd.DataFrame, fixtures: pd.DataFrame,
         rate = np.where(p["ep_next"] > 0, 0.7 * rate + 0.3 * ep_rate, rate)
         rate = pd.Series(rate, index=p.index)
 
+    if last_min is None or not len(last_min):
+        print("  NOTE: no last-season minutes (run with --deep for the full "
+              "minutes model); start probabilities fall back to this "
+              "season's starts and price rank.")
+
     fm = fixture_multiplier(teams, fixtures, from_gw, horizon)
     avail = availability(p)
-    minutes_share = np.where(p["now_cost"] >= 55, 0.85, 0.72)
+
+    # Expected minutes = P(starts), NOT price. But the spread is deliberately
+    # COMPRESSED into [MIN_SHARE, MAX_SHARE] rather than [0.18, 0.85].
+    #
+    # Why: ep = rate * minutes_share, and an uncapped share varies by ~4.7x
+    # while the underlying points rate varies far less. Minutes then dominate
+    # the objective and the ILP buys guaranteed-90-minutes defenders over
+    # players who actually score. Rotation risk should DISCOUNT a player, not
+    # disqualify him. Keep the ordering, shrink the leverage.
+    p_start = start_probability(p, from_gw, last_minutes=last_min)
+    minutes_share = MIN_SHARE + (MAX_SHARE - MIN_SHARE) * p_start
+    p["p_start"] = p_start
 
     p["ep_per_gw"] = rate * avail * minutes_share * p["team"].map(fm).fillna(1.0)
     p["ep_horizon"] = p["ep_per_gw"] * horizon
     p["value"] = p["ep_horizon"] / (p["now_cost"] / 10.0)
     return p[["id", "web_name", "team", "element_type", "now_cost", "status",
-              "selected_by_percent", "ep_per_gw", "ep_horizon", "value"]]
+              "selected_by_percent", "p_start", "ep_per_gw", "ep_horizon",
+              "value"]]
