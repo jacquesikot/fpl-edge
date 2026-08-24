@@ -37,11 +37,36 @@ SQUAD = {1: 2, 2: 5, 3: 5, 4: 3}
 XI_MIN = {1: 1, 2: 3, 3: 2, 4: 1}
 
 
+# Weight on a bench player's expected points in the objective.
+#
+# The naive formulation maximises ep over all 15 squad members equally, which
+# is wrong: bench points are only scored via autosubs, so budget spent on
+# bench ep is mostly burned. Left uncorrected the solver happily buys a
+# £5.5m second keeper who will never play, and stacks £5.5m defenders on the
+# bench, starving the XI.
+#
+# 0.12 is roughly the share of a bench player's points you actually realise
+# through autosubs and rotation over a horizon. Raise it toward 1.0 and you
+# recover the old behaviour; drop it to 0.0 and the solver buys the cheapest
+# legal bench it can find, which is too aggressive — bench players do come on.
+BENCH_WEIGHT = 0.12
+
+
 def solve(proj: pd.DataFrame, eo: pd.Series, lam: float,
           budget: int = 1000, locks: list[int] | None = None,
-          bans: list[int] | None = None) -> list[int] | None:
+          bans: list[int] | None = None,
+          bench_weight: float = BENCH_WEIGHT) -> list[int] | None:
+    """Pick 15, but value the 11 who actually play far above the 4 who don't.
+
+    Two sets of binaries: `x` = in the 15, `s` = in the starting XI. The
+    objective credits full ep to starters and only `bench_weight` of it to
+    the rest, so the ILP has a reason to spend money on the XI and buy cheap
+    cover. The EO/variance penalty stays on `x` — a player you own but bench
+    still shifts your active weight, just less of it.
+    """
     ids = proj["id"].tolist()
-    x = pulp.LpVariable.dicts("x", ids, cat="Binary")
+    x = pulp.LpVariable.dicts("x", ids, cat="Binary")   # in the 15
+    s = pulp.LpVariable.dicts("s", ids, cat="Binary")   # in the XI
     prob = pulp.LpProblem("fpl", pulp.LpMaximize)
 
     ep = dict(zip(proj["id"], proj["ep_horizon"]))
@@ -49,11 +74,32 @@ def solve(proj: pd.DataFrame, eo: pd.Series, lam: float,
     pos = dict(zip(proj["id"], proj["element_type"]))
     team = dict(zip(proj["id"], proj["team"]))
 
-    prob += pulp.lpSum((ep[i] - lam * float(eo.get(i, 0.0))) * x[i] for i in ids)
+    # starters earn full ep; squad members earn the bench share on top of it
+    # being in the squad at all. ep[i]*(bench_weight*x + (1-bench_weight)*s)
+    # => a starter gets ep, a benched player gets bench_weight * ep.
+    prob += pulp.lpSum(
+        ep[i] * (bench_weight * x[i] + (1.0 - bench_weight) * s[i])
+        - lam * float(eo.get(i, 0.0)) * x[i]
+        for i in ids
+    )
+
     prob += pulp.lpSum(x[i] for i in ids) == 15
+    prob += pulp.lpSum(s[i] for i in ids) == 11
     prob += pulp.lpSum(cost[i] * x[i] for i in ids) <= budget
+
+    for i in ids:                      # can only start if you're in the squad
+        prob += s[i] <= x[i]
+
     for p, n in SQUAD.items():
         prob += pulp.lpSum(x[i] for i in ids if pos[i] == p) == n
+
+    # legal XI shape: exactly 1 GKP, and position minimums for the outfield
+    prob += pulp.lpSum(s[i] for i in ids if pos[i] == 1) == 1
+    for p, n in XI_MIN.items():
+        if p == 1:
+            continue
+        prob += pulp.lpSum(s[i] for i in ids if pos[i] == p) >= n
+
     for t in set(team.values()):
         prob += pulp.lpSum(x[i] for i in ids if team[i] == t) <= 3
     for i in locks or []:
