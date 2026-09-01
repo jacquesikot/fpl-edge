@@ -1,24 +1,25 @@
 {
  "gw": 2,
- "captured_at": "2026-08-28T18:45:41.027146+00:00",
- "players": 620,
+ "captured_at": "2026-09-01T16:42:31.124542+00:00",
+ "players": 629,
  "fixtures": 380,
  "leagues": [
   {
    "league_id": 1325554,
    "name": "SouthSide Boyz",
-   "managers": 5,
-   "picks_captured": 5,
+   "managers": 6,
+   "picks_captured": 6,
    "missing": 0,
    "role": "focus"
   },
   {
    "league_id": 651028,
    "name": "This Is It",
-   "managers": 24,
-   "picks_captured": 24,
+   "managers": 27,
+   "picks_captured": 27,
    "missing": 0,
    "role": "secondary"
   }
- ]
+ ],
+ "final": true
 }
