@@ -1,7 +1,7 @@
 {
  "gw": 4,
- "captured_at": "2026-09-12T15:34:38.412308+00:00",
- "players": 656,
+ "captured_at": "2026-09-15T17:02:53.995076+00:00",
+ "players": 659,
  "fixtures": 380,
  "leagues": [
   {
@@ -20,5 +20,6 @@
    "missing": 0,
    "role": "secondary"
   }
- ]
+ ],
+ "final": true
 }
